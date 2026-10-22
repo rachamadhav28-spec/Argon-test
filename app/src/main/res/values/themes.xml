@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ArgonAgent" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/argon_emerald</item>
+        <item name="colorPrimaryVariant">@color/pitch_black</item>
+        <item name="colorOnPrimary">@color/pitch_black</item>
+        <item name="colorSecondary">@color/argon_violet</item>
+        <item name="android:windowBackground">@color/pitch_black</item>
+        <item name="android:statusBarColor">@color/pitch_black</item>
+        <item name="android:navigationBarColor">@color/pitch_black</item>
+    </style>
+</resources>
