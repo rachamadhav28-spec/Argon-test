@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Argon Agent</string>
+    <string name="app_tagline">Gemini 4 Argon to GitHub 1-by-1 Android Agent</string>
+</resources>
