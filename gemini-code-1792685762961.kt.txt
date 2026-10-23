@@ -1,0 +1,290 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.bro.assistant"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.bro.assistant"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{2.1}"
+        }
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-manifest")
+}
+```[cite: 1, 2, 14, 15]
+
+#### 2. `app/src/main/AndroidManifest.xml`
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="BRO"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BROAssistant">
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BROAssistant">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```[cite: 1, 2, 14, 15]
+
+#### 3. `app/src/main/java/com/bro/assistant/MainActivity.kt`
+```kotlin
+package com.bro.assistant
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.bro.assistant.ui.theme.BROTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            BROTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    BroMainScreen()
+                }
+            }
+        }
+    }
+}
+
+data class ChatMessage(val text: String, val isUser: Boolean)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BroMainScreen() {
+    var textInput by remember { mutableStateOf("") }
+    val chatMessages = remember {
+        mutableStateListOf(
+            ChatMessage("Hello! I am BRO, your action-oriented AI assistant.", false)
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("BRO Assistant", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121212))
+            )
+        },
+        bottomBar = {
+            Surface(
+                color = Color(0xFF1E1E1E),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { /* TODO: Voice Input in Stage 3 */ }) {
+                        Icon(Icons.Default.Mic, contentDescription = "Voice Input", tint = Color.Cyan)
+                    }
+                    OutlinedTextField(
+                        value = textInput,
+                        onValueChange = { textInput = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp),
+                        placeholder = { Text("Ask BRO...", color = Color.Gray) },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color.Cyan,
+                            unfocusedBorderColor = Color.DarkGray,
+                            cursorColor = Color.Cyan
+                        ),
+                        maxLines = 1
+                    )
+                    IconButton(onClick = {
+                        if (textInput.isNotBlank()) {
+                            chatMessages.add(ChatMessage(textInput, true))
+                            val query = textInput
+                            textInput = ""
+                            // Simulate response for Stage 1
+                            chatMessages.add(ChatMessage("Received: $query", false))
+                        }
+                    }) {
+                        Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.Cyan)
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF121212))
+                .padding(innerPadding)
+        ) {
+            // Futuristic Orb Placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180px.dp)
+                    .background(Color(0xFF181818)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🔵 [BRO Orb Animation State: IDLE]", color = Color.Cyan)
+            }
+
+            // Chat Messages List
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(chatMessages) { message ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = if (message.isUser) Alignment.CenterEnd else Alignment.CenterStart
+                    ) {
+                        Surface(
+                            color = if (message.isUser) Color(0xFF005662) else Color(0xFF2C2C2C),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text(
+                                text = message.text,
+                                color = Color.White,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```[cite: 2, 3, 12, 14, 15]
+
+#### 4. `app/src/main/java/com/bro/assistant/ui/theme/Theme.kt`
+```kotlin
+package com.bro.assistant.ui.theme
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+
+private val DarkColorScheme = darkColorScheme(
+    primary = Color.Cyan,
+    secondary = Color.Blue,
+    background = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E),
+    onPrimary = Color.Black,
+    onSecondary = Color.White,
+    onBackground = Color.White,
+    onSurface = Color.White,
+)
+
+@Composable
+fun BROTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = DarkColorScheme,
+        content = content
+    )
+}
+```[cite: 2, 14, 15]
+
+---
+
+### 🚀 Android Studio & Testing Instructions
+1. Open Android Studio and create a new **Empty Views Activity** or **Empty Compose Activity** project named `BRO`. Set package name to `com.bro.assistant` and minimum SDK to `26`.
+2. Replace the respective files with the code provided above (`build.gradle.kts`, `AndroidManifest.xml`, `MainActivity.kt`, and `Theme.kt`).
+3. Sync Gradle and connect your **iQOO Z9 Lite 5G** with USB Debugging enabled.
+4. Click **Run** (`Shift + F10`).
+5. **Expected Result**: The app launches successfully in dark futuristic theme, displaying the top app bar, the placeholder orb animation state (`IDLE`), the chat history with the welcome message, and a working input bar that echoes user inputs.
+
+Please verify Stage 1 on your device, and let me know when you are ready to proceed to **Stage 2 (Chat Conversation State Management)**!
